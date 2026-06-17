@@ -106,6 +106,32 @@
         </div>
     </div>
 
+   <!-- 影のオンオフ切り替え用ボタンのスタイルを追加 -->
+    <style>
+        #shadow-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            background: #ff7495;
+            border: 3px solid #ffffff;
+            border-radius: 20px;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            transition: transform 0.1s, background 0.2s;
+        }
+        #shadow-toggle-btn:active {
+            transform: scale(0.95);
+        }
+        #shadow-toggle-btn.shadow-off {
+            background: #a4b0be;
+        }
+    </style>
+
     <div id="get-overlay">
         <div id="get-modal-content">
             <div id="get-text">🎉GET!!💖</div>
@@ -116,6 +142,9 @@
             <button id="close-modal-btn">次へ</button>
         </div>
     </div>
+
+    <!-- 右下の落ち影トグルボタン -->
+    <button id="shadow-toggle-btn">影: オン</button>
 
     <!-- 相互参照のための正しい順序でスクリプト群を読み込む -->
     <script src="js/physics.js"></script>

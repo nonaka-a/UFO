@@ -40,8 +40,11 @@ const MAX_PIXEL_RATIO = IS_APPLE_MOBILE ? 1 : 1.5;
 // --- カメラドラッグ用状態変数 ---
 let isDraggingCamera = false;
 let prevCameraMouseX = 0;
-let cameraTheta = 0; // 0 = 正面 (0度), Math.PI/2 = 右側面 (90度)
+let prevCameraMouseY = 0; // Y座標のドラッグを追跡する変数を追加
+let cameraTheta = 0; // -Math.PI/2 = 左側面 (-90度), 0 = 正面, Math.PI/2 = 右側面 (+90度)
+let cameraHeightOffset = 0; // 縦ドラッグでカメラの高さをオフセットする変数
 let bgDome;          // 遠景としてカメラに追従させるための背景ドーム変数
+let dirLight;        // 影をキャストするメイン平行光（常時オン）
 
 initPhysics();
 initThree();
@@ -136,7 +139,8 @@ function initThree() {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    // 平行光は常に影（castShadow = true）を生成し続け、景品などの影は保ちます
+    dirLight = new THREE.DirectionalLight(0xffffff, 0.55);
     dirLight.position.set(0, 15, 0); 
     dirLight.castShadow = !IS_APPLE_MOBILE;
     dirLight.shadow.mapSize.width = 1024;
@@ -157,13 +161,23 @@ function initThree() {
 }
 
 function updateMainCamera() {
-    const minTheta = 0;
+    // 範囲を -90度 (-Math.PI/2) から +90度 (+Math.PI/2) の合計180度に拡張
+    const minTheta = -Math.PI / 2;
     const maxTheta = Math.PI / 2;
     cameraTheta = Math.max(minTheta, Math.min(maxTheta, cameraTheta));
 
-    const R = 9.2; 
-    const ratio = cameraTheta / (Math.PI / 2);
-    const Y = 4.8 + ratio * (2.2 - 4.8);
+    // カメラの高さが下に行くほど（cameraHeightOffsetがマイナス）、台に近づきすぎないように距離Rを自動で引き離す（後退させる）
+    let R = 9.2;
+    if (cameraHeightOffset < 0) {
+        // 下にいくほど引き離し係数を適用（最大で R ≒ 12.0 まで自動的に離れる設計）
+        R = 9.2 - (cameraHeightOffset * 1.15); 
+    }
+    
+    // 左右どちらに回り込んでも同様にカメラの基本高さが低くなるよう、角度の「絶対値」を基準に割合を計算
+    const ratio = Math.abs(cameraTheta) / (Math.PI / 2);
+    
+    // 基本の高さに、上下ドラッグで蓄積された cameraHeightOffset を足す
+    const Y = (4.8 + ratio * (2.2 - 4.8)) + cameraHeightOffset;
 
     const X = R * Math.sin(cameraTheta);
     const Z = R * Math.cos(cameraTheta);
@@ -178,20 +192,29 @@ function updateMainCamera() {
 function initCameraDrag() {
     const dom = renderer.domElement;
 
-    const onStart = (clientX) => {
+    const onStart = (clientX, clientY) => {
         if (gameState === 'modal') return;
         isDraggingCamera = true;
         prevCameraMouseX = clientX;
+        prevCameraMouseY = clientY; // 縦ドラッグ開始位置を記録
     };
 
-    const onMove = (clientX) => {
+    const onMove = (clientX, clientY) => {
         if (!isDraggingCamera || gameState === 'modal') return;
         const dx = clientX - prevCameraMouseX;
+        const dy = clientY - prevCameraMouseY;
         
-        // ドラッグ方向とカメラワークの直感を一致させるため、減算 ( -= ) に変更
+        // 左右ドラッグ：旋回角度 theta の変更
         cameraTheta -= dx * 0.006;
         
+        // 上下ドラッグ：カメラ高さオフセットを増減
+        // 下にドラッグすると見上げるようにカメラが下がり（マイナス方向）、上にドラッグすると見下ろすようにカメラが上がる
+        cameraHeightOffset += dy * 0.015;
+        // 低い人目線（-2.4：大幅なローアングル）から高い見下ろし目線（1.8）までを制限
+        cameraHeightOffset = Math.max(-2.4, Math.min(1.8, cameraHeightOffset));
+        
         prevCameraMouseX = clientX;
+        prevCameraMouseY = clientY;
         updateMainCamera();
     };
 
@@ -199,21 +222,21 @@ function initCameraDrag() {
         isDraggingCamera = false;
     };
 
-    dom.addEventListener('mousedown', (e) => onStart(e.clientX));
-    window.addEventListener('mousemove', (e) => onMove(e.clientX));
+    dom.addEventListener('mousedown', (e) => onStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
     window.addEventListener('mouseup', onEnd);
 
     dom.addEventListener('touchstart', (e) => {
         if (e.touches.length > 0) {
-            onStart(e.touches[0].clientX);
+            onStart(e.touches[0].clientX, e.touches[0].clientY);
         }
     }, { passive: true });
-    window.addEventListener('touchmove', (e) => {
+    dom.addEventListener('touchmove', (e) => {
         if (e.touches.length > 0) {
-            onMove(e.touches[0].clientX);
+            onMove(e.touches[0].clientX, e.touches[0].clientY);
         }
     }, { passive: true });
-    window.addEventListener('touchend', onEnd);
+    dom.addEventListener('touchend', onEnd);
 }
 
 // 景品の同期・穴判定処理

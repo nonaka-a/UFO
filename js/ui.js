@@ -11,14 +11,56 @@ let savedGameState = null;
 
 // UIインタラクション初期化
 function initUI() {
+    // 180度カメラ用にカメラボタンの動作を拡張（どこからでも一度正面に戻り、正面なら右側面へトグル）
     document.getElementById('cam-btn').addEventListener('click', () => {
-        if (cameraTheta < Math.PI / 4) {
-            cameraTheta = Math.PI / 2; // 右側面(90度)に回す
-        } else {
+        if (cameraTheta !== 0) {
             cameraTheta = 0; // 正面(0度)に戻す
+        } else {
+            cameraTheta = Math.PI / 2; // 右側面(90度)に回す
         }
         updateMainCamera();
     });
+
+    // アーム（クレーン本体と爪）の影投影フラグのみを再帰的に切り替えるヘルパー
+    function setCraneShadow(enabled) {
+        if (craneUnitMesh) {
+            craneUnitMesh.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = enabled;
+                }
+            });
+        }
+        clawVisuals.forEach((claw) => {
+            claw.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = enabled;
+                }
+            });
+        });
+    }
+
+    // 右下のトグルボタン。景品の影は残したまま、アーム自体の影だけをオンオフします
+    const shadowBtn = document.getElementById('shadow-toggle-btn');
+    let isCraneShadowEnabled = true; // アームの影の初期状態
+    
+    if (shadowBtn) {
+        shadowBtn.addEventListener('click', () => {
+            isCraneShadowEnabled = !isCraneShadowEnabled;
+            
+            // アーム自体の影投影フラグのみを切り替える
+            setCraneShadow(isCraneShadowEnabled);
+            
+            if (isCraneShadowEnabled) {
+                shadowBtn.innerText = '影: オン';
+                shadowBtn.classList.remove('shadow-off');
+            } else {
+                shadowBtn.innerText = '影: オフ';
+                shadowBtn.classList.add('shadow-off');
+            }
+            // シャドウマップの更新をトリガー
+            renderer.shadowMap.needsUpdate = true;
+        });
+    }
 
     setupButtonControl('move-up', 'up');
     setupButtonControl('move-down', 'down');
