@@ -50,6 +50,29 @@ createCrane();
 createPrizes();
 initUI();
 startTimer();
+
+// BGM（BGM.mp3）のオーディオ設定
+const bgm = new Audio('BGM.mp3');
+bgm.loop = true;
+bgm.volume = 0.45; // プレイの邪魔にならないよう、適度な音量に調整
+
+// ブラウザの自動再生ブロックを回避するため、最初のユーザー操作でBGMを開始
+function playBGMOnFirstInteraction() {
+    bgm.play().then(() => {
+        // 再生が開始されたらイベントリスナーを破棄
+        window.removeEventListener('click', playBGMOnFirstInteraction);
+        window.removeEventListener('keydown', playBGMOnFirstInteraction);
+        window.removeEventListener('touchstart', playBGMOnFirstInteraction);
+    }).catch(err => {
+        console.warn('BGMの自動再生ポリシーによるブロック: ', err);
+    });
+}
+
+// 各種操作イベントにBGM再生処理を紐付け
+window.addEventListener('click', playBGMOnFirstInteraction);
+window.addEventListener('keydown', playBGMOnFirstInteraction);
+window.addEventListener('touchstart', playBGMOnFirstInteraction);
+
 animate();
 
 function isAppleMobileDevice() {
