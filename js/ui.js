@@ -134,13 +134,23 @@ function triggerGetUI(prizeData) {
 
     } else {
         const radius = 0.72; 
+        const isSphere = prizeData.isSphere;
+        const baseColor = prizeData.color || 0xff758c;
+
         const mat = new THREE.MeshStandardMaterial({
-            color: prizeData.color || 0xff758c,
+            color: isSphere ? 0xffffff : baseColor, // 球体はお顔が暗くならないようにベースは白
             roughness: 0.5,
             metalness: 0.05
         });
+
+        // 獲得画面で表示する球体（ニコちゃん）にもお顔のテクスチャを再現して貼り付ける
+        if (isSphere) {
+            mat.map = createSmileyTexture(baseColor);
+            mat.needsUpdate = true;
+        }
+
         let geo;
-        if (prizeData.isSphere) {
+        if (isSphere) {
             geo = new THREE.SphereGeometry(radius, 32, 32);
         } else {
             geo = new THREE.BoxGeometry(radius * 1.3, radius * 1.3, radius * 1.3);

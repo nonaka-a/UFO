@@ -37,10 +37,11 @@ const HOLE_SIZE = 3.0;
 const IS_APPLE_MOBILE = isAppleMobileDevice();
 const MAX_PIXEL_RATIO = IS_APPLE_MOBILE ? 1 : 1.5;
 
-// カメラドラッグ用の変数
+// --- カメラドラッグ用状態変数 ---
 let isDraggingCamera = false;
 let prevCameraMouseX = 0;
-let cameraTheta = 0;
+let cameraTheta = 0; // 0 = 正面 (0度), Math.PI/2 = 右側面 (90度)
+let bgDome;          // 遠景としてカメラに追従させるための背景ドーム変数
 
 initPhysics();
 initThree();
@@ -61,7 +62,35 @@ function isAppleMobileDevice() {
 function initThree() {
     const container = document.getElementById('canvas-container');
     scene = new THREE.Scene();
+    
+    // 空間のベース背景色
     scene.background = new THREE.Color(0xffe3ed); 
+
+    // カメラに連動する背景球体（スカイドーム）をシーンに追加
+    // カメラのクリッピング限界（far:100）の手前に収まるよう、半径45 of 球体に設定
+    const bgGeometry = new THREE.SphereGeometry(45, 32, 32);
+    const bgMaterial = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
+    bgDome = new THREE.Mesh(bgGeometry, bgMaterial);
+    
+    // 初期配置
+    bgDome.position.set(0, 0, 0);
+    scene.add(bgDome);
+
+    // 背景画像 (BG.jpg) をロードしてドームマテリアルに適用
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load('BG.jpg', (texture) => {
+        texture.encoding = THREE.sRGBEncoding;
+        
+        // 横方向への引き伸ばしを少し抑えて縮小（タイリング）し、自然な表示にする設定
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.ClampToEdgeWrapping;
+        texture.repeat.set(2, 1); // 横方向の密度を2倍にして背景をスッキリ小さく見せる
+        
+        bgMaterial.map = texture;
+        bgMaterial.needsUpdate = true;
+    }, undefined, (err) => {
+        console.warn('背景画像 "BG.jpg" の読み込みに失敗しました。', err);
+    });
 
     const mainCam = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
     activeCameras.front = mainCam;
@@ -229,6 +258,12 @@ function animate() {
 
     world.step(1 / 60);
     updatePrizesPhysics();
+
+    // 毎フレーム、背景ドームの位置をアクティブカメラの位置に完全追従させる（無限遠効果）
+    // これにより、カメラがどう動いても背景が極端に寄らず、はるか遠くに小さく美しく表示されます
+    if (bgDome && activeCameras.front) {
+        bgDome.position.copy(activeCameras.front.position);
+    }
 
     renderer.render(scene, activeCameras.front);
 }

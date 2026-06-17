@@ -113,6 +113,62 @@ function createModelPrizes(models, count, size, startIndex) {
     }
 }
 
+// 動的にニコちゃんマークのテクスチャをCanvasに描画して生成する関数
+function createSmileyTexture(colorHex) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    // カラーコードを文字列に変換
+    const colorStr = "#" + colorHex.toString(16).padStart(6, '0');
+
+    // ベースの球体色で塗りつぶし
+    ctx.fillStyle = colorStr;
+    ctx.fillRect(0, 0, 256, 256);
+
+    // 【重要】球体への貼付時の3D横引き伸ばしに完全に対抗するため、
+    // X軸方向の縮小スケールを「0.55倍」に更に強化してお顔を中心にきゅっと収縮させます
+    ctx.save();
+    ctx.translate(128, 128);
+    ctx.scale(0.55, 1.0);
+    ctx.translate(-128, -128);
+
+    // 目の描画（お目々が離れすぎないように中心128にさらに10pxずつ近づけて配置）
+    ctx.fillStyle = '#2c3e50';
+    // 左目
+    ctx.beginPath();
+    ctx.arc(96, 105, 14, 0, Math.PI * 2);
+    ctx.fill();
+    // 右目
+    ctx.beginPath();
+    ctx.arc(160, 105, 14, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 目のハイライト（お目々の移動に同期させて配置）
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(91, 99, 4.5, 0, Math.PI * 2);
+    ctx.arc(155, 99, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // にっこりスマイル口
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(128, 124, 38, 0.12 * Math.PI, 0.88 * Math.PI);
+    ctx.stroke();
+
+    // 描画倍率の復元
+    ctx.restore();
+
+    // Three.jsテクスチャへ変換
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.encoding = THREE.sRGBEncoding;
+    return texture;
+}
+
 function createFallbackPrizes(count) {
     // 彩度と明度をわずかに抑えたパステルカラーに変更
     const pastelColors = [0xe0667a, 0xe070d8, 0x6ecf8c, 0x6290e0, 0xd4ba59, 0xe0a2a2, 0x94e067, 0x1d919c];
@@ -124,11 +180,18 @@ function createFallbackPrizes(count) {
         
         let geo, mesh, body;
         const colorVal = pastelColors[i % pastelColors.length];
+        
         const mat = new THREE.MeshStandardMaterial({ 
-            color: colorVal,
+            color: isSphere ? 0xffffff : colorVal, // 球体の場合はテクスチャ自体のパステルカラーを反映させるためベースは白色
             roughness: 0.6, // 反射を抑えてマット（ぬいぐるみ風）な質感に調整
             metalness: 0.05
         });
+
+        // 球体（Sphere）の場合のみニコちゃんテクスチャをマッピング
+        if (isSphere) {
+            mat.map = createSmileyTexture(colorVal);
+            mat.needsUpdate = true;
+        }
 
         if (isSphere) {
             geo = new THREE.SphereGeometry(radius, 20, 20);
@@ -165,11 +228,19 @@ function createFallbackPrizes(count) {
         const position = getPrizeStartPosition(i);
 
         mesh.position.set(position.x, position.y, position.z);
+        
+        // 球体（ニコちゃん）はお顔が適度にカメラ（手前）を向くように、Y回転角度を制御して配置
+        if (isSphere) {
+            mesh.rotation.y = (Math.random() - 0.5) * 1.5; // 正面（カメラ方向）を中心に少し左右に傾ける
+        }
+
         scene.add(mesh);
         prizeMeshes.push(mesh);
 
         body.position.set(position.x, position.y, position.z);
-        if (!isSphere) {
+        if (isSphere) {
+            body.quaternion.setFromEuler(0, mesh.rotation.y, 0);
+        } else {
             body.quaternion.setFromEuler(Math.random(), Math.random(), Math.random());
         }
         world.addBody(body);
