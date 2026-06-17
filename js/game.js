@@ -390,12 +390,22 @@ function initUI() {
         if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
         if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
         if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+
+        // スペースキーが押された時に掴む処理を実行（ページのスクロールを防止）
+        if (e.key === ' ' || e.code === 'Space') {
+            e.preventDefault();
+            startCatchSequence();
+        }
     });
     window.addEventListener('keyup', (e) => {
         if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
         if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
         if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
         if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+
+        if (e.key === ' ' || e.code === 'Space') {
+            e.preventDefault();
+        }
     });
 
     document.getElementById('catch-btn').addEventListener('click', () => {
