@@ -8,34 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
-</head>
-<body>
-
-    <div id="canvas-container"></div>
-
-    <div id="ui-container">
-        <div class="ui-top-row">
-            <div id="timer">60</div>
-            <button id="cam-btn" class="btn-common">カメラ切替</button>
-        </div>
-        <div class="controls-row">
-            <div class="d-pad">
-                <div class="pad-empty"></div>
-                <button class="d-btn" id="move-up">▲</button>
-                <div class="pad-empty"></div>
-                <button class="d-btn" id="move-left">◀</button>
-                <div class="pad-empty"></div>
-                <button class="d-btn" id="move-right">▶</button>
-                <div class="pad-empty"></div>
-                <button class="d-btn" id="move-down">▼</button>
-                <div class="pad-empty"></div>
-             </div>
-            <!-- 「掴む」の文字を空にして非表示にします -->
-            <button id="catch-btn" class="btn-common"></button>
-        </div>
-    </div>
-
- <style>
+    <style>
         /* ゲット景品プレビューモーダルのスタイル */
         #get-overlay {
             display: none;
@@ -106,6 +79,32 @@
             box-shadow: none;
         }
     </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-container">
+        <div class="ui-top-row">
+            <div id="timer">60</div>
+            <button id="cam-btn" class="btn-common">カメラ切替</button>
+        </div>
+        <div class="controls-row">
+            <div class="d-pad">
+                <div class="pad-empty"></div>
+                <button class="d-btn" id="move-up">▲</button>
+                <div class="pad-empty"></div>
+                <button class="d-btn" id="move-left">◀</button>
+                <div class="pad-empty"></div>
+                <button class="d-btn" id="move-right">▶</button>
+                <div class="pad-empty"></div>
+                <button class="d-btn" id="move-down">▼</button>
+                <div class="pad-empty"></div>
+            </div>
+            <!-- 「掴む」の文字を空にして非表示にします -->
+            <button id="catch-btn" class="btn-common"></button>
+        </div>
+    </div>
 
     <div id="get-overlay">
         <div id="get-modal-content">
@@ -118,7 +117,12 @@
         </div>
     </div>
 
+    <!-- 相互参照のための正しい順序でスクリプト群を読み込む -->
+    <script src="js/physics.js"></script>
+    <script src="js/stage.js"></script>
+    <script src="js/crane.js"></script>
     <script src="js/prizes.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
 </body>
 </html>
