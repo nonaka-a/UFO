@@ -176,8 +176,8 @@ function updateMainCamera() {
     // 左右どちらに回り込んでも同様にカメラの基本高さが低くなるよう、角度の「絶対値」を基準に割合を計算
     const ratio = Math.abs(cameraTheta) / (Math.PI / 2);
     
-    // 基本の高さに、上下ドラッグで蓄積された cameraHeightOffset を足す
-    const Y = (4.8 + ratio * (2.2 - 4.8)) + cameraHeightOffset;
+    // 正面基準の高さを「4.8」から「4.1」へ引き下げ、上下ドラッグで蓄積された cameraHeightOffset を足す
+    const Y = (4.1 + ratio * (2.2 - 4.1)) + cameraHeightOffset;
 
     const X = R * Math.sin(cameraTheta);
     const Z = R * Math.cos(cameraTheta);
@@ -208,10 +208,9 @@ function initCameraDrag() {
         cameraTheta -= dx * 0.006;
         
         // 上下ドラッグ：カメラ高さオフセットを増減
-        // 下にドラッグすると見上げるようにカメラが下がり（マイナス方向）、上にドラッグすると見下ろすようにカメラが上がる
         cameraHeightOffset += dy * 0.015;
-        // 低い人目線（-2.4：大幅なローアングル）から高い見下ろし目線（1.8）までを制限
-        cameraHeightOffset = Math.max(-2.4, Math.min(1.8, cameraHeightOffset));
+        // 限界まで見上げられるよう、クランプ下限を -2.4 から「-2.8」へさらに拡張
+        cameraHeightOffset = Math.max(-2.8, Math.min(1.8, cameraHeightOffset));
         
         prevCameraMouseX = clientX;
         prevCameraMouseY = clientY;
