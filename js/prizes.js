@@ -1,6 +1,6 @@
 // 景品設定: GLBを増やすときは modelPaths にパスを追加する
 const PRIZE_CONFIG = {
-    modelPaths: ['GLB/cap.glb', 'GLB/ninja.glb','GLB/pack.glb'],
+    modelPaths: ['GLB/cap.glb', 'GLB/ninja.glb','GLB/pityu.glb','GLB/kamu.glb','GLB/torikera.glb','GLB/pack.glb'],
     fallbackCount: 24,
     modelCount: 16,
     mobileModelCount: 8,

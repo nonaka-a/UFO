@@ -126,10 +126,10 @@ function initThree() {
     container.appendChild(renderer.domElement);
 
     // GLBの見やすさを維持しつつ、白飛びを防ぐ輝度（環境光:0.9、平行光:0.7）に調整
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.55);
     dirLight.position.set(0, 15, 0); // アームの影が「真下」に正確に落ち、位置合わせのガイドとなるよう真上からの照射に戻す
     dirLight.castShadow = !IS_APPLE_MOBILE;
     dirLight.shadow.mapSize.width = 1024;
