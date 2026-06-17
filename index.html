@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SWEETS CATCHER</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-container">
+        <div class="ui-top-row">
+            <div id="timer">60</div>
+            <button id="cam-btn" class="btn-common">カメラ切替</button>
+        </div>
+        <div class="controls-row">
+            <div class="d-pad">
+                <div class="pad-empty"></div>
+                <button class="d-btn" id="move-up">▲</button>
+                <div class="pad-empty"></div>
+                <button class="d-btn" id="move-left">◀</button>
+                <div class="pad-empty"></div>
+                <button class="d-btn" id="move-right">▶</button>
+                <div class="pad-empty"></div>
+                <button class="d-btn" id="move-down">▼</button>
+                <div class="pad-empty"></div>
+            </div>
+            <button id="catch-btn" class="btn-common">掴む</button>
+        </div>
+    </div>
+
+ <style>
+        /* ゲット景品プレビューモーダルのスタイル */
+        #get-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #get-modal-content {
+            background: #ffe3ed;
+            padding: 24px;
+            border-radius: 20px;
+            text-align: center;
+            border: 5px solid #ff7495;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+            max-width: 95%;
+            width: 440px; /* ウィンドウ幅を拡大 */
+            box-sizing: border-box;
+        }
+        #get-text {
+            font-size: 32px; /* 文字サイズを少し拡大 */
+            font-weight: bold;
+            color: #ff4757;
+            text-shadow: 2px 2px 0px #ffffff;
+            margin-bottom: 12px;
+        }
+        #preview-container {
+            width: 100%;
+            height: 360px; /* プレビューエリア高さを大幅に拡張 */
+            margin: 10px auto;
+            background: #fff0f5;
+            border-radius: 12px;
+            border: 3px solid #ff7495;
+            overflow: hidden;
+            cursor: grab;
+        }
+        #preview-container:active {
+            cursor: grabbing;
+        }
+        #preview-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .preview-hint {
+            font-size: 13px;
+            color: #ff7495;
+            font-weight: bold;
+            margin: 8px 0 15px 0;
+        }
+        #close-modal-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #ff4757;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 0px #b3303c;
+            transition: transform 0.1s;
+        }
+        #close-modal-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+    </style>
+
+    <div id="get-overlay">
+        <div id="get-modal-content">
+            <div id="get-text">🎉GET!!💖</div>
+            <div id="preview-container">
+                <canvas id="preview-canvas"></canvas>
+            </div>
+            <p class="preview-hint">ドラッグして回転できるよ！</p>
+            <button id="close-modal-btn">次へ</button>
+        </div>
+    </div>
+
+    <script src="js/prizes.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

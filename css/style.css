@@ -1,0 +1,164 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #fff5f5;
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 3D表示エリア */
+#canvas-container {
+    width: 100vw;
+    height: 60vh;
+    position: relative;
+}
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 2D UIエリア */
+#ui-container {
+    width: 100vw;
+    height: 40vh;
+    background: linear-gradient(135deg, #fff0f6 0%, #ffdeeb 100%);
+    box-sizing: border-box;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 6px solid #ff73b3;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+    position: relative;
+}
+
+/* 上段：タイマーとカメラ切り替え */
+.ui-top-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+}
+
+#timer {
+    font-size: 26px;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(to bottom, #ff73b3, #ff4757);
+    padding: 4px 20px;
+    border-radius: 20px;
+    border: 3px solid #fff;
+    box-shadow: 0 3px 6px rgba(255, 71, 87, 0.3);
+    min-width: 70px;
+    text-align: center;
+}
+
+.btn-common {
+    background: linear-gradient(to bottom, #ff9ff3, #f368e0);
+    color: white;
+    border: 2px solid #fff;
+    padding: 8px 18px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 18px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #d946b5, 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.1s;
+}
+.btn-common:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #d946b5, 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 下段：操作パネル */
+.controls-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-grow: 1;
+    margin-top: 5px;
+}
+
+/* 十字キー */
+.d-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(3, 52px);
+    gap: 6px;
+}
+.d-btn {
+    background: #fff;
+    color: #ff4757;
+    border: 2px solid #ffb8b8;
+    border-radius: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #ffb8b8, 0 4px 6px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.d-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #ffb8b8, 0 2px 3px rgba(0,0,0,0.05);
+}
+.pad-empty { visibility: hidden; }
+
+/* 掴むボタン */
+#catch-btn {
+    background: linear-gradient(135deg, #ff6b81 0%, #ff4757 100%);
+    width: 105px;
+    height: 105px;
+    border-radius: 50%;
+    font-size: 22px;
+    color: #fff;
+    border: 4px solid #fff;
+    box-shadow: 0 6px 0 #c4414e, 0 8px 15px rgba(255, 71, 87, 0.4);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+#catch-btn:active {
+    transform: translateY(5px);
+    box-shadow: 0 1px 0 #c4414e, 0 3px 6px rgba(255, 71, 87, 0.4);
+}
+#catch-btn:disabled {
+    background: #dcdde1;
+    border-color: #f5f6fa;
+    box-shadow: none;
+    transform: translateY(5px);
+    color: #a1a2a4;
+    cursor: not-allowed;
+    text-shadow: none;
+}
+
+/* GET演出用ポップアップ */
+#get-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 240, 245, 0.85);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 100;
+}
+#get-text {
+    font-size: 72px;
+    color: #ff4757;
+    font-weight: bold;
+    text-shadow: 3px 3px 0px #fff, -3px -3px 0px #fff, 3px -3px 0px #fff, -3px 3px 0px #fff, 0 0 20px rgba(255, 107, 129, 0.6);
+    animation: bounce 0.4s infinite alternate ease-in-out;
+}
+@keyframes bounce {
+    from { transform: scale(1) rotate(-3deg); }
+    to { transform: scale(1.15) rotate(3deg); }
+}
