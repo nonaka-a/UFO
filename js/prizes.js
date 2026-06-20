@@ -127,7 +127,7 @@ function createSmileyTexture(colorHex) {
     ctx.fillStyle = colorStr;
     ctx.fillRect(0, 0, 256, 256);
 
-    // 【重要】球体への貼付時の3D横引き伸ばしに完全に対抗するため、
+    // 球体への貼付時の3D横引き伸ばしに完全に対抗するため、
     // X軸方向の縮小スケールを「0.55倍」に更に強化してお顔を中心にきゅっと収縮させます
     ctx.save();
     ctx.translate(128, 128);

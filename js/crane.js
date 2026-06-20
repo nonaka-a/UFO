@@ -2,6 +2,7 @@ let craneUnitMesh;
 let clawLinks = [];
 let clawVisuals = [];
 let sequenceTimer = 0;
+let nonContactTimer = 0; // 非接触状態の経過時間を追跡するタイマー
 
 // 4. クレーンユニットの生成
 function createCrane() {
@@ -145,11 +146,67 @@ function startCatchSequence() {
     document.getElementById('catch-btn').disabled = true;
     keys.up = keys.down = keys.left = keys.right = false;
     sequenceTimer = 0;
+    nonContactTimer = 0;
     clawLockedRatios = Array(CLAW_COUNT).fill(null);
     currentClawRatios = Array(CLAW_COUNT).fill(1.0);
     heldPrizeBodies.clear();
     heldPrizeOffsets.clear();
     prizeContactClaws.clear();
+}
+
+// 景品との接触が失われて1秒が経過した爪を徐々に閉じる内部ヘルパー関数
+function updateClawSqueeze() {
+    let hasContact = false;
+
+    // 1. 保持している景品がある場合、アームからの距離で脱落判定を行う
+    if (heldPrizeBodies.size > 0) {
+        let activeHoldCount = 0;
+        heldPrizeBodies.forEach(body => {
+            const dy = body.position.y - craneUnitMesh.position.y;
+            
+            // 景品がアーム中心より下2.2ユニット以内に留まっている場合は保持中と判定
+            if (dy > -2.2) {
+                activeHoldCount++;
+            } else {
+                // 完全に落下した場合は運搬リストから除外
+                heldPrizeBodies.delete(body);
+                heldPrizeOffsets.delete(body);
+            }
+        });
+
+        // 景品を1個以上キープできている場合は、運搬を安定させるため、アームの閉じ幅を完全固定して早期リターン
+        if (activeHoldCount > 0) {
+            nonContactTimer = 0; 
+            return;
+        }
+    }
+
+    // 2. 保持している景品がない（落とした、または元々空振り）の場合、爪が今何か景品に接触しているか確認
+    for (let i = 0; i < CLAW_COUNT; i++) {
+        if (checkClawContact(i)) {
+            hasContact = true;
+        }
+    }
+
+    // 3. 接触状態に基づき、非接触経過時間を蓄積
+    if (hasContact) {
+        nonContactTimer = 0; 
+    } else {
+        nonContactTimer += 1 / 60; // 毎フレーム時間加算 (1秒 = 1.0)
+    }
+
+    // 4. 完全に非接触の状態が1秒間続いた場合のみ、アームをスムーズに全閉に向かわせる
+    if (nonContactTimer >= 1.0) {
+        const closingSpeed = 0.04;
+        for (let i = 0; i < CLAW_COUNT; i++) {
+            if (clawLockedRatios[i] !== null) {
+                clawLockedRatios[i] = Math.max(0.0, clawLockedRatios[i] - closingSpeed);
+                currentClawRatios[i] = clawLockedRatios[i];
+            } else {
+                currentClawRatios[i] = Math.max(0.0, currentClawRatios[i] - closingSpeed);
+            }
+        }
+    }
 }
 
 // クレーンの自動行動状態機械（FSM）
@@ -189,6 +246,7 @@ function updateCraneSequence() {
     } 
     else if (gameState === 'lift') {
         craneUnitMesh.position.y += LIFT_SPEED;
+        updateClawSqueeze();
         updateClawPositions(currentClawRatios);
         if (craneUnitMesh.position.y >= CRANE_HOME_Y) {
             craneUnitMesh.position.y = CRANE_HOME_Y;
@@ -199,6 +257,7 @@ function updateCraneSequence() {
     }
     else if (gameState === 'hold') {
         sequenceTimer += 1 / 60;
+        updateClawSqueeze();
         updateClawPositions(currentClawRatios);
         if (sequenceTimer >= HOLD_PAUSE_DURATION) {
             gameState = 'return';
@@ -211,6 +270,8 @@ function updateCraneSequence() {
         let dx = targetX - craneUnitMesh.position.x;
         let dz = targetZ - craneUnitMesh.position.z;
         let dist = Math.sqrt(dx * dx + dz * dz);
+
+        updateClawSqueeze();
 
         if (dist > 0.08) {
             craneUnitMesh.position.x += (dx / dist) * MOVE_SPEED;
@@ -225,6 +286,7 @@ function updateCraneSequence() {
     } 
     else if (gameState === 'releasePause') {
         sequenceTimer += 1 / 60;
+        updateClawSqueeze();
         updateClawPositions(currentClawRatios);
         if (sequenceTimer >= RELEASE_PAUSE_DURATION) {
             prepareHeldPrizesForRelease();
@@ -282,6 +344,9 @@ function prepareHeldPrizesForRelease() {
         body.position.z += (HOLE_POS.z - body.position.z) * 0.25;
         body.velocity.set(0, RELEASE_DROP_SPEED, 0);
         body.angularVelocity.set(0, 0, 0);
+        
+        // 物理的な接触反応のみをオフにして、爪をまっすぐすり抜けさせて落とす
+        body.collisionResponse = false; 
     });
 }
 
@@ -318,6 +383,7 @@ function captureContactedPrizes() {
     });
 }
 
+// 爪と特定の景品の物理衝突を安定して確認する
 function checkClawContact(clawIndex) {
     const clawBody = clawLinks[clawIndex];
     for (let i = 0; i < world.contacts.length; i++) {
